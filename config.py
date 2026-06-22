@@ -24,10 +24,11 @@ EMBED_MODEL = "all-MiniLM-L6-v2"
 # Folder Settings
 # ─────────────────────────────
 # Where PDF files are stored
-PDF_FOLDER = "docs"
+import os
+PDF_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
 
 # Where vector database stores data
-CHROMA_DB_PATH = "chroma_db"
+CHROMA_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
 
 # ─────────────────────────────
 # PDF Processing Settings
