@@ -1,0 +1,14 @@
+streamlit==1.45.1
+groq==0.13.0
+langchain-groq==0.1.9
+sentence-transformers==3.0.1
+chromadb==0.5.3
+langchain==0.2.16
+langchain-community==0.2.16
+langchain-text-splitters==0.2.4
+PyPDF2==3.0.1
+python-dotenv==1.0.1
+tiktoken==0.7.0
+pandas==2.1.4
+torch==2.3.1
+deepeval==0.21.73

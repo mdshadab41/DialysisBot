@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  dialysisbot:
+    build: .
+    container_name: dialysisbot
+    ports:
+      - "8501:8501"
+    env_file:
+      - .env                        # loads your GROQ_API_KEY
+    volumes:
+      - ./docs:/app/docs            # PDFs persist between restarts
+      - ./chroma_db:/app/chroma_db  # vector DB persists between restarts
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+# Named volumes (optional — uncomment if you want Docker-managed volumes)
+# volumes:
+#   dialysisbot_docs:
+#   dialysisbot_chroma:

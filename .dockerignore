@@ -1,0 +1,37 @@
+# Virtual environment — huge, not needed
+venv/
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+
+# Vector database — rebuilt inside container
+chroma_db/
+
+# Secrets
+.env
+
+# CSV results
+*.csv
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+
+# DeepEval cache
+.deepeval/
+
+# Docs project
+docs_project/
+
+# Tests
+tests/
