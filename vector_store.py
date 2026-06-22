@@ -4,7 +4,6 @@ Stores and retrieves embeddings using ChromaDB
 """
 
 import chromadb
-from chromadb.config import Settings
 from typing import List, Dict
 import os
 import config
@@ -20,12 +19,8 @@ class VectorStore:
         os.makedirs(config.CHROMA_DB_PATH, exist_ok=True)
         
         # Initialize ChromaDB client
-        self.client = chromadb.Client(
-    chromadb.config.Settings(
-        chroma_db_impl="duckdb+parquet",
-        persist_directory=config.CHROMA_DB_PATH,
-        anonymized_telemetry=False
-    )
+        self.client = chromadb.PersistentClient(
+    path=config.CHROMA_DB_PATH
 )
         
         # Collection name
