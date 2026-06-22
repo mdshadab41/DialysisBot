@@ -20,12 +20,13 @@ class VectorStore:
         os.makedirs(config.CHROMA_DB_PATH, exist_ok=True)
         
         # Initialize ChromaDB client
-        self.client = chromadb.PersistentClient(
-            path=config.CHROMA_DB_PATH,
-            settings=Settings(
-                anonymized_telemetry=False
-            )
-        )
+        self.client = chromadb.Client(
+    chromadb.config.Settings(
+        chroma_db_impl="duckdb+parquet",
+        persist_directory=config.CHROMA_DB_PATH,
+        anonymized_telemetry=False
+    )
+)
         
         # Collection name
         self.collection_name = "dialysis_docs"
