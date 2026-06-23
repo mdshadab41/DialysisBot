@@ -3,14 +3,11 @@ DialysisBot - Streamlit Web Application
 Minimal modern UI with gradient design
 """
 
-import streamlit as st # type: ignore
+import streamlit as st
 from chat import ChatBot
 import config
 from datetime import datetime
 from pdf_manager import save_uploaded_pdf, list_all_pdfs, delete_pdf, rebuild_vector_database
-
-
-
 
 # ── Page config ────────────────────────────────────────────────────
 st.set_page_config(
@@ -19,7 +16,6 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
-
 
 # ── CSS ────────────────────────────────────────────────────────────
 st.markdown("""
@@ -294,51 +290,51 @@ with st.sidebar:
 
     st.divider()
 
-   with st.expander("📁 Manage PDFs"):
-    uploaded_file = st.file_uploader(
-        "Upload PDF",
-        type=['pdf']
-    )
-    
-    category = "uploaded"
-    
-    if uploaded_file:
-        if st.button("📤 Upload PDF", use_container_width=True):
-            with st.spinner('Uploading...'):
-                result = save_uploaded_pdf(uploaded_file, category)
-                if result['success']:
-                    st.success(result['message'])
-                    st.info("Click Rebuild Database to use this PDF")
-                else:
-                    st.error(result['message'])
+    with st.expander("📁 Manage PDFs"):
+        uploaded_file = st.file_uploader(
+            "Upload PDF",
+            type=['pdf']
+        )
 
-    st.markdown("**Current PDFs**")
-    pdfs = list_all_pdfs()
-    if pdfs:
-        for pdf in pdfs:
-            c1, c2 = st.columns([3, 1])
-            with c1:
-                st.caption(f"📄 {pdf['name']}")
-            with c2:
-                if st.button("🗑️", key=f"d_{pdf['path']}"):
-                    result = delete_pdf(pdf['path'])
+        category = "uploaded"
+
+        if uploaded_file:
+            if st.button("📤 Upload PDF", use_container_width=True):
+                with st.spinner('Uploading...'):
+                    result = save_uploaded_pdf(uploaded_file, category)
                     if result['success']:
                         st.success(result['message'])
-                        st.rerun()
-    else:
-        st.info("No PDFs found")
+                        st.info("Click Rebuild Database to use this PDF")
+                    else:
+                        st.error(result['message'])
 
-    if st.button("🔄 Rebuild database", 
-                 type="primary", 
-                 use_container_width=True):
-        with st.spinner('Rebuilding...'):
-            result = rebuild_vector_database()
-            if result['success']:
-                st.success(result['message'])
-                st.session_state.chatbot = ChatBot()
-                st.rerun()
-            else:
-                st.error(result['message'])
+        st.markdown("**Current PDFs**")
+        pdfs = list_all_pdfs()
+        if pdfs:
+            for pdf in pdfs:
+                c1, c2 = st.columns([3, 1])
+                with c1:
+                    st.caption(f"📄 {pdf['name']}")
+                with c2:
+                    if st.button("🗑️", key=f"d_{pdf['path']}"):
+                        result = delete_pdf(pdf['path'])
+                        if result['success']:
+                            st.success(result['message'])
+                            st.rerun()
+        else:
+            st.info("No PDFs found")
+
+        if st.button("🔄 Rebuild database",
+                     type="primary",
+                     use_container_width=True):
+            with st.spinner('Rebuilding...'):
+                result = rebuild_vector_database()
+                if result['success']:
+                    st.success(result['message'])
+                    st.session_state.chatbot = ChatBot()
+                    st.rerun()
+                else:
+                    st.error(result['message'])
 
 # ── Chat history ───────────────────────────────────────────────────
 for message in st.session_state.messages:
