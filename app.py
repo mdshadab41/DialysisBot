@@ -9,6 +9,24 @@ import config
 from datetime import datetime
 from pdf_manager import save_uploaded_pdf, list_all_pdfs, delete_pdf, rebuild_vector_database
 
+
+import os
+from pathlib import Path
+
+# DEBUG - remove after fixing
+st.sidebar.write("**Debug Info:**")
+st.sidebar.write(f"Current dir: {os.getcwd()}")
+st.sidebar.write(f"App file location: {os.path.dirname(os.path.abspath(__file__))}")
+st.sidebar.write(f"PDF folder config: {config.PDF_FOLDER}")
+
+# Show all files in /app
+all_files = []
+for root, dirs, files in os.walk("/app"):
+    for file in files:
+        if file.endswith(".pdf"):
+            all_files.append(os.path.join(root, file))
+st.sidebar.write(f"PDFs found anywhere: {all_files}")
+
 # ── Page config ────────────────────────────────────────────────────
 st.set_page_config(
     page_title="DialysisBot",
