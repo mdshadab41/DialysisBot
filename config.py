@@ -4,7 +4,7 @@ All settings are stored here in one place
 """
 
 import os
-from dotenv import load_dotenv # type: ignore
+from dotenv import load_dotenv
 
 # Load .env file
 load_dotenv()
@@ -14,41 +14,24 @@ load_dotenv()
 # ─────────────────────────────
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-# Model for generating answers (Groq-hosted Llama3 - FREE)
+# Model for generating answers
 CHAT_MODEL = "llama-3.1-8b-instant"
 
-# Model for embeddings (runs locally, no API needed)
+# Model for embeddings (runs locally)
 EMBED_MODEL = "all-MiniLM-L6-v2"
 
 # ─────────────────────────────
 # Folder Settings
 # ─────────────────────────────
-# Where PDF files are stored
-import sys
-# Use /data/ for HuggingFace (persistent) or local docs/ for development
-if os.path.exists("/data"):
-    PDF_FOLDER = "/data/docs"
-    CHROMA_DB_PATH = "/data/chroma_db"
-else:
-    PDF_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
-    CHROMA_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
+PDF_FOLDER = os.path.join(os.path.dirname(os.path.abspath(__file__)), "docs")
+CHROMA_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "chroma_db")
 
 # ─────────────────────────────
 # PDF Processing Settings
 # ─────────────────────────────
 CHUNK_SIZE = 1200
 CHUNK_OVERLAP = 300
-CHUNK_SEPARATORS = [
-    "\n\n",
-    "\n",
-    ". ",
-    "! ",
-    "? ",
-    "; ",
-    ", ",
-    " ",
-    ""
-]
+CHUNK_SEPARATORS = ["\n\n", "\n", ". ", "! ", "? ", "; ", ", ", " ", ""]
 
 # ─────────────────────────────
 # Retrieval Settings
