@@ -296,10 +296,7 @@ with st.sidebar:
 
     with st.expander("📁 Manage PDFs"):
         uploaded_file = st.file_uploader("Upload PDF", type=['pdf'])
-        category = st.selectbox(
-            "Category",
-            ["diet", "procedure", "emergency", "labs", "uploaded"]
-        )
+        category = "uploaded"
         if uploaded_file and st.button("📤 Upload"):
             with st.spinner('Uploading...'):
                 result = save_uploaded_pdf(uploaded_file, category)

@@ -14,7 +14,7 @@ RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTr
 
 COPY . .
 
-RUN mkdir -p docs chroma_db
+RUN mkdir -p /data/docs /data/chroma_db
 
 RUN mkdir -p /root/.streamlit && echo '\
 [server]\n\
