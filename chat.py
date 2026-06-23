@@ -3,14 +3,11 @@ Chat Module
 Combines retrieval with LLM to generate answers
 """
 
-from groq import Groq # type: ignore
+import requests
 from typing import List, Dict
 from retriever import Retriever
 import config
 from confidence import calculate_confidence
-
-# Initialize Groq client once
-client = Groq(api_key=config.GROQ_API_KEY)
 
 
 class ChatBot:
@@ -25,16 +22,6 @@ class ChatBot:
         print("ChatBot initialized")
 
     def create_prompt(self, query: str, context: str) -> str:
-        """
-        Create prompt for the LLM
-
-        Args:
-            query: User's question
-            context: Retrieved context from documents
-
-        Returns:
-            Formatted prompt
-        """
         prompt = f"""You are a helpful medical assistant specialized in dialysis care. 
 Answer the user's question based ONLY on the context provided below. 
 
@@ -54,16 +41,6 @@ ANSWER:"""
         return prompt
 
     def chat(self, query: str, show_sources: bool = True) -> Dict:
-        """
-        Process a user query and generate response
-
-        Args:
-            query: User's question
-            show_sources: Whether to return source information
-
-        Returns:
-            Dictionary with answer and sources
-        """
         print(f"\n💬 User: {query}")
 
         # Step 1: Retrieve relevant chunks
@@ -86,30 +63,45 @@ ANSWER:"""
         # Step 3: Create prompt
         prompt = self.create_prompt(query, context)
 
-        # Step 4: Generate answer with Groq
+        # Step 4: Generate answer via Groq HTTP API
         print(f"🤖 Generating answer using {config.CHAT_MODEL} via Groq...")
 
         try:
-            response = client.chat.completions.create(
-                model=config.CHAT_MODEL,
-                messages=[
-                    {
-                        'role': 'system',
-                        'content': 'You are a helpful medical assistant for dialysis patients.'
-                    },
-                    {
-                        'role': 'user',
-                        'content': prompt
-                    }
-                ],
-                temperature=config.TEMPERATURE
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {config.GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": config.CHAT_MODEL,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a helpful medical assistant for dialysis patients."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": config.TEMPERATURE
+                },
+                timeout=30
             )
 
-            answer = response.choices[0].message.content
+            print(f"Groq status: {response.status_code}")
+
+            if response.status_code == 200:
+                answer = response.json()["choices"][0]["message"]["content"]
+            else:
+                print(f"Groq error: {response.text[:300]}")
+                answer = f"API Error {response.status_code}: {response.text[:200]}"
 
         except Exception as e:
-            print(f"Error generating response: {str(e)}")
-            answer = "Sorry, I encountered an error while generating the response."
+            import traceback
+            print(f"FULL ERROR: {traceback.format_exc()}")
+            answer = f"Connection error: {str(e)}"
 
         # Prepare sources
         sources = []
@@ -126,7 +118,6 @@ ANSWER:"""
 
         confidence = calculate_confidence(chunks)
 
-        # Add to history
         self.chat_history.append({
             'query': query,
             'answer': answer,
@@ -141,40 +132,15 @@ ANSWER:"""
         }
 
     def display_response(self, response: Dict):
-        """
-        Display the chatbot response in a readable format
-        """
         print("\n" + "="*70)
         print("🤖 CHATBOT RESPONSE")
         print("="*70)
         print(response['answer'])
-
         if response['sources']:
             print("\n" + "-"*70)
             print("📚 SOURCES:")
-            print("-"*70)
             for i, source in enumerate(response['sources'], 1):
                 print(f"\n[{i}] {source['category']}/{source['filename']}")
                 print(f"    Similarity: {source['similarity']:.3f}")
                 print(f"    Preview: {source['preview']}")
-
         print("="*70)
-
-
-# Test the module if run directly
-if __name__ == "__main__":
-    print("Testing ChatBot with RAG...\n")
-    print(config.DISCLAIMER)
-
-    chatbot = ChatBot()
-
-    test_questions = [
-        "What foods should dialysis patients avoid?",
-        "How does hemodialysis work?",
-    ]
-
-    for question in test_questions:
-        print("\n" + "="*70)
-        response = chatbot.chat(question, show_sources=True)
-        chatbot.display_response(response)
-        input("\nPress Enter to continue...")

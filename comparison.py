@@ -3,14 +3,9 @@ RAG vs Non-RAG Comparison Module
 Compare answers with and without retrieval
 """
 
-from groq import Groq # type: ignore
+import requests
 from chat import ChatBot
 import config
-
-# Initialize Groq client once
-client = Groq(api_key=config.GROQ_API_KEY)
-
-git lfs track "*.pdf"
 
 
 class Comparator:
@@ -19,20 +14,10 @@ class Comparator:
     """
 
     def __init__(self):
-        """Initialize with chatbot"""
         self.chatbot = ChatBot()
         print("✅ Comparator initialized")
 
     def get_non_rag_response(self, query: str) -> str:
-        """
-        Get response without RAG (just LLM)
-
-        Args:
-            query: User's question
-
-        Returns:
-            Answer from LLM without retrieval
-        """
         prompt = f"""You are a helpful medical assistant specialized in dialysis care.
 Answer the following question based on your general knowledge:
 
@@ -41,43 +26,43 @@ Question: {query}
 Answer:"""
 
         try:
-            response = client.chat.completions.create(
-                model=config.CHAT_MODEL,
-                messages=[
-                    {
-                        'role': 'system',
-                        'content': 'You are a helpful medical assistant for dialysis patients.'
-                    },
-                    {
-                        'role': 'user',
-                        'content': prompt
-                    }
-                ],
-                temperature=config.TEMPERATURE
+            response = requests.post(
+                "https://api.groq.com/openai/v1/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {config.GROQ_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "model": config.CHAT_MODEL,
+                    "messages": [
+                        {
+                            "role": "system",
+                            "content": "You are a helpful medical assistant for dialysis patients."
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    "temperature": config.TEMPERATURE
+                },
+                timeout=30
             )
 
-            return response.choices[0].message.content
+            if response.status_code == 200:
+                return response.json()["choices"][0]["message"]["content"]
+            else:
+                return f"API Error {response.status_code}: {response.text[:200]}"
 
         except Exception as e:
             return f"Error: {str(e)}"
 
     def compare(self, query: str) -> dict:
-        """
-        Compare RAG vs Non-RAG responses
-
-        Args:
-            query: User's question
-
-        Returns:
-            Dictionary with both responses and metadata
-        """
         print(f"\n🔄 Comparing responses for: '{query}'")
 
-        # Get RAG response
         print("1️⃣ Getting RAG response...")
         rag_response = self.chatbot.chat(query, show_sources=True)
 
-        # Get Non-RAG response
         print("2️⃣ Getting Non-RAG response...")
         non_rag_answer = self.get_non_rag_response(query)
 
@@ -98,26 +83,3 @@ Answer:"""
                 }
             }
         }
-
-
-# Test the module
-if __name__ == "__main__":
-    print("Testing RAG vs Non-RAG Comparison...\n")
-
-    comparator = Comparator()
-    test_query = "What foods should dialysis patients avoid?"
-    result = comparator.compare(test_query)
-
-    print("\n" + "="*70)
-    print("COMPARISON RESULTS")
-    print("="*70)
-    print(f"\nQuestion: {result['query']}")
-
-    print("\n--- WITH RAG (Using PDFs) ---")
-    print(result['rag']['answer'])
-    print(f"\nConfidence: {result['rag']['confidence']['score']}%")
-    print(f"Sources: {len(result['rag']['sources'])} documents")
-
-    print("\n--- WITHOUT RAG (Just LLM) ---")
-    print(result['non_rag']['answer'])
-    print("\n" + "="*70)
