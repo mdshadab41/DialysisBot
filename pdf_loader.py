@@ -10,25 +10,28 @@ from PyPDF2 import PdfReader # type: ignore
 import config
 
 def get_all_pdf_files() -> List[Dict[str, str]]:
-    """
-    Find all PDF files in the docs folder and subfolders
-    
-    Returns:
-        List of dictionaries with 'path', 'filename', and 'category'
-    """
     pdf_files = []
-    docs_path = Path(config.PDF_FOLDER)
     
-    # Check if docs folder exists
-    if not docs_path.exists():
-        print(f"Error: {config.PDF_FOLDER} folder not found!")
+    # Try multiple possible paths
+    possible_paths = [
+        Path(config.PDF_FOLDER),           # relative: docs/
+        Path("/app/docs"),                  # HuggingFace absolute
+        Path(__file__).parent / "docs",     # same folder as script
+    ]
+    
+    docs_path = None
+    for path in possible_paths:
+        if path.exists():
+            docs_path = path
+            print(f"✅ Found docs folder at: {path}")
+            break
+    
+    if docs_path is None:
+        print("❌ docs folder not found in any location!")
         return pdf_files
     
-    # Walk through all subfolders
     for pdf_path in docs_path.rglob("*.pdf"):
-        # Get category from parent folder name
         category = pdf_path.parent.name if pdf_path.parent != docs_path else "general"
-        
         pdf_files.append({
             "path": str(pdf_path),
             "filename": pdf_path.name,
