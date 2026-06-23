@@ -9,10 +9,13 @@ from dotenv import load_dotenv
 # Load .env file
 load_dotenv()
 
+
 # ─────────────────────────────
 # Groq API Settings
 # ─────────────────────────────
-GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+GROQ_API_KEY = os.getenv("GROQ_API_KEY", "").strip()
+
+
 
 # Model for generating answers
 CHAT_MODEL = "llama-3.1-8b-instant"
