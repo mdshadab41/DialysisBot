@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME     = "dialysisbot"
-        DOCKER_USER  = "mdshadab41"
+        APP_NAME     = 'dialysisbot'
+        DOCKER_USER  = 'mdshadab41'
         IMAGE_NAME   = "${DOCKER_USER}/${APP_NAME}"
         IMAGE_TAG    = "${BUILD_NUMBER}"
         GROQ_API_KEY = credentials('groq-api-key')
@@ -12,7 +12,6 @@ pipeline {
     }
 
     stages {
-
         stage('Checkout') {
             steps {
                 echo 'Checking out code from GitHub...'
@@ -24,7 +23,7 @@ pipeline {
         stage('Verify Files') {
             steps {
                 echo 'Verifying project files...'
-                bat 'dir'
+                sh 'ls -la'
                 echo 'Files verified'
             }
         }
@@ -32,8 +31,8 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
-                bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                bat "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
                 echo 'Docker image built successfully'
             }
         }
@@ -41,10 +40,10 @@ pipeline {
         stage('Test Container') {
             steps {
                 echo 'Testing container starts correctly...'
-                bat "docker run -d --name test_%BUILD_NUMBER% -p 8502:7860 -e GROQ_API_KEY=%GROQ_API_KEY% ${IMAGE_NAME}:latest"
-                bat 'timeout /t 15'
-                bat "docker stop test_%BUILD_NUMBER%"
-                bat "docker rm test_%BUILD_NUMBER%"
+                sh "docker run -d --name test_${BUILD_NUMBER} -p 8502:7860 -e GROQ_API_KEY=${GROQ_API_KEY} ${IMAGE_NAME}:latest"
+                sh 'sleep 15'
+                sh "docker stop test_${BUILD_NUMBER} || true"
+                sh "docker rm test_${BUILD_NUMBER} || true"
                 echo 'Container test passed'
             }
         }
@@ -52,9 +51,9 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 echo 'Pushing image to Docker Hub...'
-                bat "docker login -u %DOCKER_CREDS_USR% -p %DOCKER_CREDS_PSW%"
-                bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                bat "docker push ${IMAGE_NAME}:latest"
+                sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
+                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                sh "docker push ${IMAGE_NAME}:latest"
                 echo 'Image pushed to Docker Hub successfully'
             }
         }
@@ -62,8 +61,8 @@ pipeline {
         stage('Deploy to HuggingFace') {
             steps {
                 echo 'Deploying to HuggingFace Spaces...'
-                bat "git remote set-url huggingface https://shadab-41:%HF_TOKEN%@huggingface.co/spaces/shadab-41/DialysisBot"
-                bat "git push huggingface main --force"
+                sh "git remote set-url huggingface https://shadab-41:${HF_TOKEN}@huggingface.co/spaces/shadab-41/DialysisBot || git remote add huggingface https://shadab-41:${HF_TOKEN}@huggingface.co/spaces/shadab-41/DialysisBot"
+                sh 'git push huggingface main --force'
                 echo 'Deployed to HuggingFace successfully'
             }
         }
@@ -71,7 +70,7 @@ pipeline {
         stage('Cleanup') {
             steps {
                 echo 'Cleaning up old images...'
-                bat "docker image prune -f"
+                sh 'docker image prune -f || true'
                 echo 'Cleanup done'
             }
         }
