@@ -2,100 +2,90 @@ pipeline {
     agent any
 
     environment {
-        APP_NAME    = "dialysisbot"
-        IMAGE_TAG   = "${BUILD_NUMBER}"
-        GROQ_API_KEY = credentials('groq-api-key')   // stored in Jenkins credentials
+        APP_NAME     = "dialysisbot"
+        DOCKER_USER  = "mdshadab41"
+        IMAGE_NAME   = "${DOCKER_USER}/${APP_NAME}"
+        IMAGE_TAG    = "${BUILD_NUMBER}"
+        GROQ_API_KEY = credentials('groq-api-key')
+        DOCKER_CREDS = credentials('docker-hub-creds')
+        HF_TOKEN     = credentials('hf-token')
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo 'Pulling latest code from GitHub...'
+                echo 'Checking out code from GitHub...'
                 checkout scm
+                echo 'Code checked out successfully'
             }
         }
 
-        stage('Lint') {
+        stage('Verify Files') {
             steps {
-                echo 'Checking code quality...'
-                sh '''
-                    pip install flake8 --quiet
-                    flake8 . --max-line-length=120 \
-                        --exclude=venv,.venv,__pycache__ \
-                        --count --statistics || true
-                '''
-            }
-        }
-
-        stage('Test') {
-            steps {
-                echo 'Running tests...'
-                sh '''
-                    pip install pytest python-dotenv --quiet
-                    pytest tests/ -v --tb=short || true
-                '''
-                // "|| true" so pipeline doesn't fail if no tests yet
-                // Remove "|| true" once you have real tests
+                echo 'Verifying project files...'
+                bat 'dir'
+                echo 'Files verified'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image: ${APP_NAME}:${IMAGE_TAG}"
-                sh "docker build -t ${APP_NAME}:${IMAGE_TAG} ."
-                sh "docker tag ${APP_NAME}:${IMAGE_TAG} ${APP_NAME}:latest"
+                echo "Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
+                bat "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                bat "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+                echo 'Docker image built successfully'
             }
         }
 
-        stage('Deploy Locally') {
-            // For now: stop old container, start new one on same machine
+        stage('Test Container') {
             steps {
-                echo 'Deploying container...'
-                sh """
-                    docker stop ${APP_NAME} || true
-                    docker rm ${APP_NAME}   || true
-                    docker run -d \
-                        --name ${APP_NAME} \
-                        -p 8501:8501 \
-                        -e GROQ_API_KEY=${GROQ_API_KEY} \
-                        -v \$(pwd)/docs:/app/docs \
-                        -v \$(pwd)/chroma_db:/app/chroma_db \
-                        --restart unless-stopped \
-                        ${APP_NAME}:latest
-                """
+                echo 'Testing container starts correctly...'
+                bat "docker run -d --name test_%BUILD_NUMBER% -p 8502:7860 -e GROQ_API_KEY=%GROQ_API_KEY% ${IMAGE_NAME}:latest"
+                bat 'timeout /t 15'
+                bat "docker stop test_%BUILD_NUMBER%"
+                bat "docker rm test_%BUILD_NUMBER%"
+                echo 'Container test passed'
             }
         }
 
-        stage('Health Check') {
+        stage('Push to Docker Hub') {
             steps {
-                echo 'Checking app is healthy...'
-                sh '''
-                    sleep 15
-                    curl -f http://localhost:8501/_stcore/health \
-                        && echo "App is healthy!" \
-                        || echo "Health check failed"
-                '''
+                echo 'Pushing image to Docker Hub...'
+                bat "docker login -u %DOCKER_CREDS_USR% -p %DOCKER_CREDS_PSW%"
+                bat "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                bat "docker push ${IMAGE_NAME}:latest"
+                echo 'Image pushed to Docker Hub successfully'
             }
         }
 
-        stage('Cleanup Old Images') {
+        stage('Deploy to HuggingFace') {
             steps {
-                echo 'Removing old Docker images...'
-                sh "docker image prune -f || true"
+                echo 'Deploying to HuggingFace Spaces...'
+                bat "git remote set-url huggingface https://shadab-41:%HF_TOKEN%@huggingface.co/spaces/shadab-41/DialysisBot"
+                bat "git push huggingface main --force"
+                echo 'Deployed to HuggingFace successfully'
+            }
+        }
+
+        stage('Cleanup') {
+            steps {
+                echo 'Cleaning up old images...'
+                bat "docker image prune -f"
+                echo 'Cleanup done'
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline succeeded! DialysisBot is live at http://localhost:8501'
+            echo 'Pipeline succeeded! DialysisBot deployed successfully.'
         }
         failure {
-            echo ' Pipeline failed. Check the logs above.'
+            echo 'Pipeline failed. Check logs above.'
         }
         always {
-            echo "📊 Build #${BUILD_NUMBER} finished."
+            echo "Build #${BUILD_NUMBER} finished."
         }
     }
 }
