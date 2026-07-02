@@ -61,8 +61,14 @@ pipeline {
         stage('Deploy to HuggingFace') {
             steps {
                 echo 'Deploying to HuggingFace Spaces...'
-                sh "git remote set-url huggingface https://shadab-41:${HF_TOKEN}@huggingface.co/spaces/shadab-41/DialysisBot || git remote add huggingface https://shadab-41:${HF_TOKEN}@huggingface.co/spaces/shadab-41/DialysisBot"
-                sh 'git push huggingface main --force'
+                sh """
+            git config --global user.email "shadabjhu00447@gmail.com.com"
+            git config --global user.name "mdshadab41"
+            git remote remove huggingface || true
+            git remote add huggingface https://shadab-41:${HF_TOKEN}@huggingface.co/spaces/shadab-41/DialysisBot
+            git checkout -b main || git checkout main
+            git push huggingface main --force
+        """
                 echo 'Deployed to HuggingFace successfully'
             }
         }
