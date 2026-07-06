@@ -3,12 +3,14 @@ pipeline {
 
     environment {
         APP_NAME     = 'dialysisbot'
-        DOCKER_USER  = 'mdshadab41'
-        IMAGE_NAME   = "${DOCKER_USER}/${APP_NAME}"
+        AWS_REGION   = 'ap-south-1'
+        ECR_REGISTRY = '806528484602.dkr.ecr.ap-south-1.amazonaws.com'
+        ECR_REPO     = "${ECR_REGISTRY}/${APP_NAME}"
         IMAGE_TAG    = "${BUILD_NUMBER}"
         GROQ_API_KEY = credentials('groq-api-key')
-        DOCKER_CREDS = credentials('docker-hub-creds')
         HF_TOKEN     = credentials('hf-token')
+        AWS_ACCESS_KEY_ID     = credentials('aws-access-key')
+        AWS_SECRET_ACCESS_KEY = credentials('aws-secret-key')
     }
 
     stages {
@@ -22,7 +24,7 @@ pipeline {
 
         stage('Verify Files') {
             steps {
-                echo 'Verifying project files...'
+                echo '🔍 Verifying project files...'
                 sh 'ls -la'
                 echo 'Files verified'
             }
@@ -30,47 +32,51 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                echo "Building Docker image: ${IMAGE_NAME}:${IMAGE_TAG}"
-                sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
-                sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
+                echo "Building Docker image: ${ECR_REPO}:${IMAGE_TAG}"
+                sh "docker build -t ${ECR_REPO}:${IMAGE_TAG} ."
+                sh "docker tag ${ECR_REPO}:${IMAGE_TAG} ${ECR_REPO}:latest"
                 echo 'Docker image built successfully'
             }
         }
 
         stage('Test Container') {
             steps {
-                echo 'Testing container starts correctly...'
-                sh "docker run -d --name test_${BUILD_NUMBER} -p 8502:7860 -e GROQ_API_KEY=${GROQ_API_KEY} ${IMAGE_NAME}:latest"
+                echo 'Testing container...'
+                sh "docker run -d --name test_${BUILD_NUMBER} -p 8502:7860 -e GROQ_API_KEY=${GROQ_API_KEY} ${ECR_REPO}:latest"
                 sh 'sleep 15'
                 sh "docker stop test_${BUILD_NUMBER} || true"
                 sh "docker rm test_${BUILD_NUMBER} || true"
-                echo 'Container test passed'
+                echo '✅ Container test passed'
             }
         }
 
-        stage('Push to Docker Hub') {
+        stage('Push to AWS ECR') {
             steps {
-                echo 'Pushing image to Docker Hub...'
-                sh "docker login -u ${DOCKER_CREDS_USR} -p ${DOCKER_CREDS_PSW}"
-                sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
-                sh "docker push ${IMAGE_NAME}:latest"
-                echo 'Image pushed to Docker Hub successfully'
+                echo 'Pushing image to AWS ECR...'
+                sh """
+                    aws ecr get-login-password --region ${AWS_REGION} | \
+                    docker login --username AWS \
+                    --password-stdin ${ECR_REGISTRY}
+                """
+                sh "docker push ${ECR_REPO}:${IMAGE_TAG}"
+                sh "docker push ${ECR_REPO}:latest"
+                echo 'Image pushed to ECR successfully'
             }
         }
 
-       stage('Deploy to HuggingFace') {
-    steps {
-        echo 'Deploying to HuggingFace Spaces...'
-        sh '''
-            git config --global user.email "shadabjhu00447@gmail.com"
-            git config --global user.name "mdshadab41"
-            git remote remove huggingface || true
-            git remote add huggingface https://shadab-41:$HF_TOKEN@huggingface.co/spaces/shadab-41/DialysisBot
-            git push huggingface HEAD:main --force
-        '''
-        echo 'Deployed to HuggingFace successfully'
-    }
-}
+        stage('Deploy to HuggingFace') {
+            steps {
+                echo 'Deploying to HuggingFace Spaces...'
+                sh '''
+                    git config --global user.email "shadab@dialysisbot.com"
+                    git config --global user.name "Shadab Rayeen"
+                    git remote remove huggingface || true
+                    git remote add huggingface https://shadab-41:$HF_TOKEN@huggingface.co/spaces/shadab-41/DialysisBot
+                    git push huggingface HEAD:main --force
+                '''
+                echo 'Deployed to HuggingFace successfully'
+            }
+        }
 
         stage('Cleanup') {
             steps {
