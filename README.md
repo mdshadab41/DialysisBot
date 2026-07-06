@@ -1,5 +1,13 @@
-# 🏥 DialysisBot — AI-Powered Clinical RAG Chatbot
+---
+title: DialysisBot
+emoji: 🏥
+colorFrom: blue
+colorTo: purple
+sdk: docker
+pinned: false
+---
 
+# 🏥 DialysisBot — AI-Powered Clinical RAG Chatbot
 
 > A production-grade RAG (Retrieval-Augmented Generation) chatbot for dialysis patients, built with Python, Streamlit, Groq, and ChromaDB. Fully containerized with Docker and deployed via Jenkins CI/CD pipeline.
 
@@ -97,25 +105,26 @@ Developer
 
 ## 🛠️ Tech Stack
 
-| Category | Technology |
-|----------|-----------|
-| Language | Python 3.11 |
-| UI | Streamlit |
-| LLM | Groq API (Llama 3.1 8B) |
-| Embeddings | Sentence Transformers (all-MiniLM-L6-v2) |
-| Vector DB | ChromaDB |
-| Evaluation | DeepEval |
-| Container | Docker (multi-stage build) |
-| CI/CD | Jenkins |
-| Registry | Docker Hub |
-| Deployment | HuggingFace Spaces |
-| Version Control | Git + GitHub |
+| Category        | Technology                               |
+| --------------- | ---------------------------------------- |
+| Language        | Python 3.11                              |
+| UI              | Streamlit                                |
+| LLM             | Groq API (Llama 3.1 8B)                  |
+| Embeddings      | Sentence Transformers (all-MiniLM-L6-v2) |
+| Vector DB       | ChromaDB                                 |
+| Evaluation      | DeepEval                                 |
+| Container       | Docker (multi-stage build)               |
+| CI/CD           | Jenkins                                  |
+| Registry        | Docker Hub                               |
+| Deployment      | HuggingFace Spaces                       |
+| Version Control | Git + GitHub                             |
 
 ---
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Python 3.11+
 - Docker Desktop
 - Groq API key (free at [console.groq.com](https://console.groq.com))
@@ -193,21 +202,22 @@ DialysisBot/
 
 ## 📊 Key Metrics
 
-| Metric | Value |
-|--------|-------|
-| Pipeline Duration | 48 seconds |
-| Build Context Reduction | 2.8GB → 17MB (165x) |
-| Evaluation Questions | 25 clinical questions |
-| Document Chunks | 200 chunks from 6 PDFs |
-| Embedding Dimensions | 384 |
-| Production Issues Resolved | 12 |
-| Pipeline Stages | 7 |
+| Metric                     | Value                  |
+| -------------------------- | ---------------------- |
+| Pipeline Duration          | 48 seconds             |
+| Build Context Reduction    | 2.8GB → 17MB (165x)    |
+| Evaluation Questions       | 25 clinical questions  |
+| Document Chunks            | 200 chunks from 6 PDFs |
+| Embedding Dimensions       | 384                    |
+| Production Issues Resolved | 12                     |
+| Pipeline Stages            | 7                      |
 
 ---
 
 ## 🔧 CI/CD Setup
 
 ### Jenkins Credentials Required
+
 ```
 groq-api-key      → Groq API key
 docker-hub-creds  → Docker Hub username + token
@@ -215,6 +225,7 @@ hf-token          → HuggingFace token
 ```
 
 ### Pipeline Stages
+
 1. **Checkout** — Pull latest code from GitHub
 2. **Verify Files** — Confirm project structure
 3. **Build Docker** — Multi-stage image build
@@ -228,17 +239,20 @@ hf-token          → HuggingFace token
 ## 🧪 Evaluation
 
 Run DeepEval evaluation:
+
 ```bash
 python evaluation.py
 ```
 
 Metrics evaluated:
+
 - **Faithfulness** — Does answer stick to documents?
 - **Answer Relevancy** — Does answer address the question?
 - **Contextual Precision** — Are top chunks most relevant?
 - **Contextual Recall** — Did retrieval cover everything needed?
 
 Results saved to:
+
 - `deepeval_results.csv`
 - `deepeval_detailed.csv`
 - `ground_truths_from_chromadb.csv`
@@ -276,15 +290,15 @@ GROQ_API_KEY=your_groq_api_key_here
 
 ## 🤝 Connect With Me
 
-* 🌐 GitHub: [https://github.com/mdshadab41](https://github.com/mdshadab41)
-* 💼 LinkedIn: [https://www.linkedin.com/in/md-shadab-a52981130](https://www.linkedin.com/in/md-shadab-a52981130)
+- 🌐 GitHub: [https://github.com/mdshadab41](https://github.com/mdshadab41)
+- 💼 LinkedIn: [https://www.linkedin.com/in/md-shadab-a52981130](https://www.linkedin.com/in/md-shadab-a52981130)
 
 ## 🔗 Project Links
 
-* 🚀 Live App: [https://shadab-41-dialysisbot.hf.space](https://shadab-41-dialysisbot.hf.space)
-* 📦 GitHub Repo: [https://github.com/mdshadab41/DialysisBot](https://github.com/mdshadab41/DialysisBot)
-* 🐳 Docker Hub: [https://hub.docker.com/r/mdshadab41/dialysisbot](https://hub.docker.com/r/mdshadab41/dialysisbot)
-* 🤗 HuggingFace: [https://huggingface.co/spaces/shadab-41/DialysisBot](https://huggingface.co/spaces/shadab-41/DialysisBot)
+- 🚀 Live App: [https://shadab-41-dialysisbot.hf.space](https://shadab-41-dialysisbot.hf.space)
+- 📦 GitHub Repo: [https://github.com/mdshadab41/DialysisBot](https://github.com/mdshadab41/DialysisBot)
+- 🐳 Docker Hub: [https://hub.docker.com/r/mdshadab41/dialysisbot](https://hub.docker.com/r/mdshadab41/dialysisbot)
+- 🤗 HuggingFace: [https://huggingface.co/spaces/shadab-41/DialysisBot](https://huggingface.co/spaces/shadab-41/DialysisBot)
 
 ---
 
